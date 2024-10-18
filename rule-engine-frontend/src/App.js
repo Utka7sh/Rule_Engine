@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './App.css';
 
 function App() {
     const [ruleName, setRuleName] = useState('');
@@ -62,22 +63,26 @@ function App() {
     };
 
     return (
-        <div style={{ padding: '20px' }}>
-            <h1>Rule Engine Validator</h1>
-            <div style={{ marginBottom: '20px' }}>
-                <input
-                    type="text"
-                    value={ruleString}
-                    onChange={(e) => setRuleString(e.target.value)}
-                    placeholder="Enter your rule string"
-                    style={{ width: '300px', marginRight: '10px' }}
-                />
-                <button onClick={validateRule}>Validate Rule</button>
-                <div style={{ marginTop: '10px' }}>
+        <div className="app-container">
+            {/* Rule Validation Section */}
+            <div className="validation-area">
+                <h1>Rule Engine Validator</h1>
+                <div className="search-bar">
+                    <input
+                        type="text"
+                        value={ruleString}
+                        onChange={(e) => setRuleString(e.target.value)}
+                        placeholder="Enter your rule string"
+                    />
+                    <button onClick={validateRule}>Validate Rule</button>
+                </div>
+                <div className="validation-result">
                     <strong>Validation Result:</strong> {validationResult}
                 </div>
             </div>
-            <div style={{ marginBottom: '20px' }}>
+
+            {/* Create New Rule Section */}
+            <div className="create-rule-area">
                 <h2>Create New Rule</h2>
                 <form onSubmit={createRule}>
                     <div>
@@ -86,7 +91,6 @@ function App() {
                             type="text"
                             value={ruleName}
                             onChange={(e) => setRuleName(e.target.value)}
-                            style={{ marginLeft: '10px', marginBottom: '10px', width: '300px' }}
                             required
                         />
                     </div>
@@ -95,24 +99,25 @@ function App() {
                         <textarea
                             value={ruleString}
                             onChange={(e) => setRuleString(e.target.value)}
-                            style={{ marginLeft: '10px', width: '300px', height: '100px' }}
                             required
                         />
                     </div>
                     <button type="submit">Create Rule</button>
                 </form>
+                <div className="existing-rules">
+                    <h3>Existing Rules</h3>
+                    <ul>
+                        {rules.map((rule) => (
+                            <li key={rule.id}>
+                                ID: {rule.id} - {rule.ruleName}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             </div>
-            <div style={{ marginBottom: '20px' }}>
-                <h2>Existing Rules</h2>
-                <ul>
-                    {rules.map((rule) => (
-                        <li key={rule.id}>
-                            ID: {rule.id} - {rule.ruleName}
-                        </li>
-                    ))}
-                </ul>
-            </div>
-            <div>
+
+            {/* Evaluate Rule Section */}
+            <div className="evaluate-rule-area">
                 <h2>Evaluate Rule</h2>
                 <form onSubmit={evaluateRule}>
                     <div>
@@ -121,7 +126,6 @@ function App() {
                             type="number"
                             value={ruleId}
                             onChange={(e) => setRuleId(e.target.value)}
-                            style={{ marginLeft: '10px', marginBottom: '10px', width: '300px' }}
                             required
                         />
                     </div>
@@ -130,14 +134,14 @@ function App() {
                         <textarea
                             value={ruleData}
                             onChange={(e) => setRuleData(e.target.value)}
-                            style={{ marginLeft: '10px', width: '300px', height: '100px' }}
                             placeholder='{"age": 30, "department": "Sales", "salary": 60000}'
                             required
                         />
                     </div>
                     <button type="submit">Evaluate Rule</button>
                 </form>
-                <div style={{ marginTop: '10px' }}>
+                <div className="evaluation-result">
+                    <br/>
                     <strong>Evaluation Result:</strong> {evaluationResult}
                 </div>
             </div>
