@@ -10,6 +10,7 @@ function App() {
     const [ruleData, setRuleData] = useState('{}');
     const [evaluationResult, setEvaluationResult] = useState('');
     const [validationResult, setValidationResult] = useState('');
+    const [visibleRules, setVisibleRules] = useState({});
 
     useEffect(() => {
         fetchRules();
@@ -62,11 +63,33 @@ function App() {
         }
     };
 
+    const toggleRuleVisibility = (id) => {
+        setVisibleRules((prevVisibleRules) => ({
+            ...prevVisibleRules,
+            [id]: !prevVisibleRules[id], // Toggle visibility
+        }));
+    };
+
+    const deleteRule = async (id) => {
+        console.log(`Attempting to delete rule with ID: ${id}`); // Add this line for debugging
+        try {
+            await axios.delete(`http://localhost:8080/api/rules/${id}`);
+            alert('Rule deleted successfully!');
+            fetchRules(); // Fetch rules again after deletion
+        } catch (error) {
+            console.error('Error deleting rule:', error); // Log error details for further debugging
+            alert('Error deleting rule: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
     return (
         <div className="app-container">
-            {/* Rule Validation Section */}
+            {/* Main Title */}
+            <h1 className="main-title">Rule Engine Validator</h1>
+
+            {/* Validation Area */}
             <div className="validation-area">
-                <h1>Rule Engine Validator</h1>
+                <h2>Validate Rule</h2>
                 <div className="search-bar">
                     <input
                         type="text"
@@ -81,67 +104,70 @@ function App() {
                 </div>
             </div>
 
-            {/* Create New Rule Section */}
+            {/* Create New Rule Area */}
             <div className="create-rule-area">
                 <h2>Create New Rule</h2>
                 <form onSubmit={createRule}>
-                    <div>
-                        <label>Rule Name:</label>
-                        <input
-                            type="text"
-                            value={ruleName}
-                            onChange={(e) => setRuleName(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label>Rule String:</label>
-                        <textarea
-                            value={ruleString}
-                            onChange={(e) => setRuleString(e.target.value)}
-                            required
-                        />
-                    </div>
+                    <label>Rule Name:</label>
+                    <input
+                        type="text"
+                        value={ruleName}
+                        onChange={(e) => setRuleName(e.target.value)}
+                        required
+                    />
+                    <label>Rule String:</label>
+                    <textarea
+                        value={ruleString}
+                        onChange={(e) => setRuleString(e.target.value)}
+                        required
+                    />
                     <button type="submit">Create Rule</button>
                 </form>
-                <div className="existing-rules">
-                    <h3>Existing Rules</h3>
-                    <ul>
-                        {rules.map((rule) => (
-                            <li key={rule.id}>
-                                ID: {rule.id} - {rule.ruleName}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
+                <h2>Existing Rules</h2>
+                <ul>
+                    {rules.map((rule) => (
+                        <li key={rule.id}>
+                            ID: {rule.id} - {rule.name} {/* Update to rule.name instead of rule.ruleName */}
+                            <button onClick={() => toggleRuleVisibility(rule.id)} style={{marginLeft: '10px'}}>
+                                {visibleRules[rule.id] ? 'Hide Rule' : 'Show Rule'}
+                            </button>
+                            <button
+                                onClick={() => deleteRule(rule.id)}
+                                style={{marginLeft: '10px', backgroundColor: 'red', color: 'white'}}
+                            >
+                                Delete Rule
+                            </button>
+                            {visibleRules[rule.id] && (
+                                <div style={{marginTop: '10px', paddingLeft: '20px'}}>
+                                    <strong>Rule String:</strong> {rule.ruleString}
+                                </div>
+                            )}
+                        </li>
+                    ))}
+                </ul>
             </div>
 
-            {/* Evaluate Rule Section */}
+            {/* Evaluate Rule Area */}
             <div className="evaluate-rule-area">
                 <h2>Evaluate Rule</h2>
                 <form onSubmit={evaluateRule}>
-                    <div>
-                        <label>Rule ID:</label>
-                        <input
-                            type="number"
-                            value={ruleId}
-                            onChange={(e) => setRuleId(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label>Rule Data (JSON format):</label>
-                        <textarea
-                            value={ruleData}
-                            onChange={(e) => setRuleData(e.target.value)}
-                            placeholder='{"age": 30, "department": "Sales", "salary": 60000}'
-                            required
-                        />
-                    </div>
+                    <label>Rule ID:</label>
+                    <input
+                        type="number"
+                        value={ruleId}
+                        onChange={(e) => setRuleId(e.target.value)}
+                        required
+                    />
+                    <label>Rule Data (JSON format):</label>
+                    <textarea
+                        value={ruleData}
+                        onChange={(e) => setRuleData(e.target.value)}
+                        placeholder='{"age": 30, "department": "Sales", "salary": 60000}'
+                        required
+                    />
                     <button type="submit">Evaluate Rule</button>
                 </form>
-                <div className="evaluation-result">
-                    <br/>
+                <div className="validation-result">
                     <strong>Evaluation Result:</strong> {evaluationResult}
                 </div>
             </div>

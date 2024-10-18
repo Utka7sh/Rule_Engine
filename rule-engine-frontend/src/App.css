@@ -15,6 +15,16 @@ body {
   width: 100%;
   padding: 20px;
   box-sizing: border-box;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+/* Main Title */
+.main-title {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
 /* Validation Area - Google search style */

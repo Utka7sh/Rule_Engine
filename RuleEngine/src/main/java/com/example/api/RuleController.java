@@ -57,6 +57,17 @@ public class RuleController {
         }
     }
 
+    @DeleteMapping("/rules/{id}")
+    public ResponseEntity<?> deleteRule(@PathVariable int id) {
+        Optional<Rule> rule = ruleService.getRuleById(id);
+        if (rule.isPresent()) {
+            ruleService.deleteRule(id);
+            return ResponseEntity.ok().body(Map.of("message", "Rule deleted successfully"));
+        } else {
+            return ResponseEntity.status(404).body(Map.of("message", "Rule not found"));
+        }
+    }
+
     // Endpoint to get all rules
     @GetMapping("/rules")
     public ResponseEntity<List<Rule>> getAllRules() {
