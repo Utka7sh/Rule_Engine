@@ -1,11 +1,13 @@
 package com.example.data;
 
+// Import the Condition class
+import com.example.data.Condition;
+
 public class Node {
     private String type;    // "operator" or "operand"
     private Node left;
     private Node right;
-    private String value;   // For operands (e.g., "age > 30")
-    private String operator; // For operator nodes (e.g., "AND" or "OR")
+    private Object value;   // For operands (Condition object) or operators (String)
 
     // Constructor for operator nodes
     public Node(String type, Node left, Node right, String operator) {
@@ -15,20 +17,18 @@ public class Node {
         this.type = type;
         this.left = left;
         this.right = right;
-        this.operator = operator;
-        this.value = null; // For operator nodes, value is not used
+        this.value = operator; // For operator nodes, value stores the operator
     }
 
     // Constructor for operand nodes
-    public Node(String type, String value) {
-        if (type == null || value == null) {
-            throw new IllegalArgumentException("Type and value cannot be null");
+    public Node(String type, Condition condition) {
+        if (type == null || condition == null) {
+            throw new IllegalArgumentException("Type and condition cannot be null");
         }
         this.type = type;
-        this.value = value;
+        this.value = condition; // For operand nodes, value stores the Condition object
         this.left = null;  // No children for operand nodes
         this.right = null;
-        this.operator = null; // No operator for operand nodes
     }
 
     // Getters
@@ -44,12 +44,8 @@ public class Node {
         return right;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return value;
-    }
-
-    public String getOperator() {
-        return operator;
     }
 
     // Setters

@@ -5,6 +5,7 @@ com\example\api\RuleController.class
 com\example\RuleEngineApp.class
 com\example\service\RuleService.class
 com\example\backend\RuleEngine.class
+com\example\data\Condition.class
 com\example\data\Rule.class
 com\example\repository\RuleRepository.class
 com\example\config\CorsConfig$1.class

@@ -1,9 +1,12 @@
 package com.example.backend;
 
 import com.example.data.Node;
+import com.example.data.Condition; // Import the Condition class
 
 import java.util.Stack;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RuleEngine {
 
@@ -22,122 +25,59 @@ public class RuleEngine {
         Stack<Node> operandStack = new Stack<>();
         Stack<String> operatorStack = new Stack<>();
 
-        int index = 0;
-        while (index < expression.length()) {
-            char currentChar = expression.charAt(index);
+        // Tokenize the expression (handles operators, parentheses, etc.)
+        String[] tokens = expression.trim().split("\\s*(AND|OR|\\(|\\))\\s*");
 
-            if (currentChar == '(') {
-                // Find the matching closing parenthesis for this subexpression
-                int closingIndex = findClosingParenthesis(expression, index);
-                String subExpression = expression.substring(index + 1, closingIndex);
+        for (String token : tokens) {
+            if (token.isEmpty()) continue;
 
-                // Recursively parse the sub-expression inside parentheses
-                operandStack.push(parseExpression(subExpression.trim()));
-                index = closingIndex + 1;  // Move index past the closing parenthesis
-            } else if (expression.startsWith("AND", index)) {
-                // Handle AND operator
-                while (!operatorStack.isEmpty() && operatorStack.peek().equals("OR")) {
-                    // Process OR operators before AND to handle precedence
-                    String operator = operatorStack.pop();
-                    Node right = operandStack.pop();
-                    Node left = operandStack.pop();
-                    operandStack.push(new Node("operator", left, right, operator));
-                }
-                operatorStack.push("AND");
-                index += 3;  // Move index past "AND"
-            } else if (expression.startsWith("OR", index)) {
-                // Handle OR operator
-                operatorStack.push("OR");
-                index += 2;  // Move index past "OR"
+            System.out.println("Processing token: " + token);
+
+            if (token.equals("AND") || token.equals("OR")) {
+                operatorStack.push(token);  // Logical operators
+            } else if (token.equals("(") || token.equals(")")) {
+                // Parentheses handling logic
+                continue;  // Skipping for now, adjust if needed
             } else {
-                // Extract the condition by finding the next operator or end of the expression
-                int nextIndex = findNextOperatorIndex(expression, index);
-                String condition = expression.substring(index, nextIndex).trim();
-
-                // Remove any trailing parentheses from conditions if necessary
-                while (condition.endsWith(")")) {
-                    condition = condition.substring(0, condition.length() - 1).trim();
-                }
-
-                System.out.println("Processing Condition: " + condition);  // Debugging
-
-                if (isValidCondition(condition)) {
-                    operandStack.push(new Node("operand", condition));
-                } else {
-                    throw new IllegalArgumentException("Unsupported rule format: " + condition);
-                }
-                index = nextIndex;  // Move to next part of the expression
+                // Process the condition
+                Node operandNode = createOperandNode(token.trim());
+                operandStack.push(operandNode);
             }
         }
 
-        // Process remaining operators in the stack
+        // Process remaining operators
         while (!operatorStack.isEmpty()) {
             String operator = operatorStack.pop();
-            if (operandStack.size() < 2) {
-                throw new IllegalArgumentException("Invalid rule format. Missing operands.");
-            }
             Node right = operandStack.pop();
             Node left = operandStack.pop();
-            operandStack.push(new Node("operator", left, right, operator));
+            Node operatorNode = new Node("operator", left, right, operator);
+            operandStack.push(operatorNode);
         }
 
         return operandStack.isEmpty() ? null : operandStack.pop();
     }
 
-    private int findClosingParenthesis(String expression, int openIndex) {
-        int balance = 1;
-        for (int i = openIndex + 1; i < expression.length(); i++) {
-            if (expression.charAt(i) == '(') balance++;
-            if (expression.charAt(i) == ')') balance--;
-            if (balance == 0) return i;
+    private Node createOperandNode(String expression) {
+        // Updated regex to handle numeric and string comparisons
+        Pattern pattern = Pattern.compile("(\\w+)\\s*(>|<|>=|<=|=)\\s*([0-9]+(\\.[0-9]+)?|'[^']*'|\\w+)");
+        Matcher matcher = pattern.matcher(expression);
+
+        if (matcher.matches()) {
+            String field = matcher.group(1);  // Attribute (e.g., "age")
+            String operator = matcher.group(2);  // Operator (e.g., ">")
+            String value = matcher.group(3);  // Value (e.g., "30")
+            return new Node("operand", new Condition(field, operator, value));
         }
-        throw new IllegalArgumentException("Mismatched parentheses in rule: " + expression);
+        throw new IllegalArgumentException("Invalid expression: " + expression);
     }
-
-    private int findNextOperatorIndex(String expression, int startIndex) {
-        int andIndex = expression.indexOf("AND", startIndex);
-        int orIndex = expression.indexOf("OR", startIndex);
-
-        if (andIndex == -1 && orIndex == -1) {
-            return expression.length();
-        } else if (andIndex == -1) {
-            return orIndex;
-        } else if (orIndex == -1) {
-            return andIndex;
-        } else {
-            return Math.min(andIndex, orIndex);
-        }
-    }
-
-    // Enhanced regex to properly handle string conditions and numeric conditions
-    // Enhanced regex to properly handle string conditions and numeric conditions
-    private boolean isValidCondition(String condition) {
-        // Check if parentheses are balanced within a condition
-        if (condition.contains("(") || condition.contains(")")) {
-            int openParenCount = condition.length() - condition.replace("(", "").length();
-            int closeParenCount = condition.length() - condition.replace(")", "").length();
-            if (openParenCount != closeParenCount) {
-                System.out.println("Condition has unbalanced parentheses: " + condition); // Debugging
-                return false;
-            }
-        }
-
-        boolean matches = condition.matches("age (>|>=|<|<=|=|!=) \\d+") ||
-                condition.matches("department (=|!=) '.*'") ||  // Matches only supported string operators (e.g., department = 'Sales')
-                condition.matches("salary (>|>=|<|<=|=|!=) \\d+") ||
-                condition.matches("experience (>|>=|<|<=|=|!=) \\d+");
-
-        System.out.println("Condition Validity: " + matches); // Debugging
-        return matches;
-    }
-
 
     public boolean evaluateRule(Node node, Map<String, Object> data) {
         if (node.getType().equals("operand")) {
-            String[] parts = node.getValue().split(" ");
-            String attribute = parts[0];
-            String operator = parts[1];
-            String value = parts[2].replace("'", "");  // Handle string values like 'Sales'
+            // Extract the Condition object from the operand node using getters
+            Condition condition = (Condition) node.getValue();
+            String attribute = condition.getField();
+            String operator = condition.getOperator();
+            String value = condition.getValue().replace("'", "");  // Handle string values like 'Sales'
 
             System.out.println("Evaluating: " + attribute + " " + operator + " " + value);  // Debugging
 
@@ -175,7 +115,7 @@ public class RuleEngine {
         } else if (node.getType().equals("operator")) {
             boolean leftResult = evaluateRule(node.getLeft(), data);
             boolean rightResult = evaluateRule(node.getRight(), data);
-            return node.getOperator().equals("AND") ? leftResult && rightResult : leftResult || rightResult;
+            return node.getValue().equals("AND") ? leftResult && rightResult : leftResult || rightResult;
         }
 
         return false;
