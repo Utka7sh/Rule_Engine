@@ -60,9 +60,8 @@ npm start
 ```
 _The frontend will be accessible at_ ```http://localhost:3000```.
 
-<details>
   
-<summary>Technologies Used</summary>
+## Technologies Used
 
 ### Backend:
 
@@ -76,8 +75,6 @@ _The frontend will be accessible at_ ```http://localhost:3000```.
 * ***React***: For building the user interface.
 * ***Axios***: For making HTTP requests to the backend.
 * ***CSS***: For styling.
-
-</details>
 
 ## Database Schema
 
